@@ -1,6 +1,7 @@
 # ansible-role-windows-system-tuning
 
 [![CI](https://github.com/ansible-paradise/ansible-role-windows-system-tuning/actions/workflows/ci.yml/badge.svg)](https://github.com/ansible-paradise/ansible-role-windows-system-tuning/actions)
+[![Maintained by HeidelSec](https://img.shields.io/badge/Maintained%20by-HeidelSec-0052cc?logo=shield)](https://github.com/heidelsec)
 
 Ansible role to disable Windows Defender, Windows Firewall, telemetry, and resource-heavy background services on Windows virtual machines (KVM/Proxmox, Hyper-V) and dedicated trading hosts.
 
@@ -51,6 +52,6 @@ roles:
 
 [MIT](LICENSE)
 
-## Author
+## Author & Maintenance
 
-Maintained by [ansible-paradise](https://github.com/ansible-paradise).
+Maintained by [ansible-paradise](https://github.com/ansible-paradise), an open-source initiative by [HeidelSec](https://heidelsec.de). Enterprise infrastructure hardening and security: [heidelsec.de](https://heidelsec.de).
