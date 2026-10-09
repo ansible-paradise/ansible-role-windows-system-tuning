@@ -1,0 +1,35 @@
+---
+# Master switch to enable or disable the role
+windows_system_tuning_enabled: true
+
+# Disable Windows Defender Antivirus, Real-Time Protection and Cloud Reporting
+windows_system_tuning_disable_defender: true
+
+# Disable Windows Firewall across Domain, Private and Public profiles
+windows_system_tuning_disable_firewall: true
+
+# Disable resource-heavy Windows services (Search, SysMain, Telemetry, etc.)
+windows_system_tuning_disable_services: true
+windows_system_tuning_services_to_disable:
+  - WSearch
+  - SysMain
+  - DiagTrack
+  - WerSvc
+  - dmwappushservice
+  - DoSvc
+  - MapsBroker
+
+# Prevent automatic Windows Update downloads and unexpected reboots
+windows_system_tuning_prevent_auto_reboots: true
+
+# Disable Windows hibernation (deletes hiberfil.sys, frees disk space, stops sleep latency)
+windows_system_tuning_disable_hibernation: true
+
+# Disable telemetry and CEIP scheduled tasks
+windows_system_tuning_disable_telemetry_tasks: true
+windows_system_tuning_telemetry_tasks:
+  - '\Microsoft\Windows\Customer Experience Improvement Program\Consolidator'
+  - '\Microsoft\Windows\Customer Experience Improvement Program\UsbCeip'
+  - '\Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser'
+  - '\Microsoft\Windows\Application Experience\ProgramDataUpdater'
+  - '\Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector'

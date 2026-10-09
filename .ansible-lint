@@ -1,0 +1,9 @@
+---
+exclude_paths:
+  - .github/
+  - .cache/
+  - .venv/
+  - .ansible/
+skip_list:
+  - role-name
+  - yaml[line-length]

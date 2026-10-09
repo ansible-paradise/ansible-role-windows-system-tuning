@@ -1,0 +1,6 @@
+---
+- name: Test windows_system_tuning role syntax
+  hosts: all
+  gather_facts: false
+  roles:
+    - role: .

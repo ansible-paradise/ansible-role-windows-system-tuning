@@ -1,0 +1,116 @@
+---
+- name: Validate role variables
+  ansible.builtin.include_tasks: validate.yml
+  tags:
+    - always
+
+- name: Apply Windows system and service optimizations
+  when: windows_system_tuning_enabled | bool
+  block:
+    - name: Disable Windows Defender Antivirus policies via registry
+      when: windows_system_tuning_disable_defender | bool
+      ansible.windows.win_regedit:
+        path: "{{ item.path }}"
+        name: "{{ item.name }}"
+        data: "{{ item.data }}"
+        type: dword
+      loop:
+        - path: HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender
+          name: DisableAntiSpyware
+          data: 1
+        - path: HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection
+          name: DisableRealtimeMonitoring
+          data: 1
+        - path: HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection
+          name: DisableBehaviorMonitoring
+          data: 1
+        - path: HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection
+          name: DisableOnAccessProtection
+          data: 1
+        - path: HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection
+          name: DisableScanOnRealtimeEnable
+          data: 1
+        - path: HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection
+          name: DisableIOAVProtection
+          data: 1
+        - path: HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection
+          name: DisableScriptScanning
+          data: 1
+        - path: HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Spynet
+          name: SpynetReporting
+          data: 0
+        - path: HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Spynet
+          name: SubmitSamplesConsent
+          data: 2
+
+    - name: Disable Windows Defender Realtime Monitoring via PowerShell
+      when: windows_system_tuning_disable_defender | bool
+      ansible.windows.win_powershell:
+        script: |
+          Set-MpPreference -DisableRealtimeMonitoring $true `
+                           -DisableBehaviorMonitoring $true `
+                           -DisableScriptScanning $true `
+                           -DisableIOAVProtection $true `
+                           -SubmitSamplesConsent 2 `
+                           -MAPSReporting 0 -ErrorAction SilentlyContinue
+
+    - name: Disable Windows Firewall profiles via PowerShell
+      when: windows_system_tuning_disable_firewall | bool
+      ansible.windows.win_powershell:
+        script: |
+          Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
+
+    - name: Ensure Windows Firewall is disabled via registry
+      when: windows_system_tuning_disable_firewall | bool
+      ansible.windows.win_regedit:
+        path: "{{ item }}"
+        name: EnableFirewall
+        data: 0
+        type: dword
+      loop:
+        - HKLM:\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\DomainProfile
+        - HKLM:\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\StandardProfile
+        - HKLM:\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\PublicProfile
+
+    - name: Stop and disable resource-hungry Windows services
+      when: windows_system_tuning_disable_services | bool
+      ansible.windows.win_service:
+        name: "{{ item }}"
+        start_mode: disabled
+        state: stopped
+      loop: "{{ windows_system_tuning_services_to_disable }}"
+      ignore_errors: true
+
+    - name: Prevent automatic Windows Update installation and reboots with logged on users
+      when: windows_system_tuning_prevent_auto_reboots | bool
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU
+        name: "{{ item.name }}"
+        data: "{{ item.data }}"
+        type: dword
+      loop:
+        - name: NoAutoUpdate
+          data: 1
+        - name: AUOptions
+          data: 2
+        - name: NoAutoRebootWithLoggedOnUsers
+          data: 1
+
+    - name: Disable hibernation to reclaim disk space and prevent sleep latency
+      when: windows_system_tuning_disable_hibernation | bool
+      ansible.windows.win_command: powercfg /h off
+      changed_when: false
+
+    - name: Disable telemetry and CEIP scheduled tasks
+      when: windows_system_tuning_disable_telemetry_tasks | bool
+      ansible.windows.win_powershell:
+        script: |
+          $tasks = @(
+            "{{ windows_system_tuning_telemetry_tasks | join('", "') }}"
+          )
+          foreach ($t in $tasks) {
+              $parts = $t -split '\\'
+              $name = $parts[-1]
+              $path = ($parts[0..($parts.Length - 2)] -join '\') + '\'
+              Disable-ScheduledTask -TaskPath $path -TaskName $name -ErrorAction SilentlyContinue
+          }

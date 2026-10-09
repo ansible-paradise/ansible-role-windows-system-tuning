@@ -1,0 +1,21 @@
+---
+- name: Validate windows_system_tuning boolean variables
+  ansible.builtin.assert:
+    that:
+      - windows_system_tuning_enabled is boolean
+      - windows_system_tuning_disable_defender is boolean
+      - windows_system_tuning_disable_firewall is boolean
+      - windows_system_tuning_disable_services is boolean
+      - windows_system_tuning_prevent_auto_reboots is boolean
+      - windows_system_tuning_disable_hibernation is boolean
+      - windows_system_tuning_disable_telemetry_tasks is boolean
+    fail_msg: "Boolean validation failed for windows_system_tuning variables"
+    quiet: true
+
+- name: Validate windows_system_tuning list variables
+  ansible.builtin.assert:
+    that:
+      - windows_system_tuning_services_to_disable is iterable
+      - windows_system_tuning_telemetry_tasks is iterable
+    fail_msg: "List validation failed for windows_system_tuning variables"
+    quiet: true
